@@ -2,9 +2,9 @@ import { Scene } from 'phaser';
 
 export class Game extends Scene
 {
-   platform: Phaser.Physics.Arcade.StaticGroup;
-   player: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-   cursors: Phaser.Types.Input.Keyboard.CursorKeys;
+    platform: Phaser.Physics.Arcade.StaticGroup;
+    player: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+    cursors: Phaser.Types.Input.Keyboard.CursorKeys;
 
     constructor ()
     {
