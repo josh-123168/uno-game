@@ -8,6 +8,7 @@ export class Game extends Scene
     stars: any;
     score: any;
     scoreText: any;
+    bombs: any
 
     constructor ()
     {
@@ -28,6 +29,8 @@ export class Game extends Scene
 
     create ()
     {
+        this.bombs = this.physics.add.group();
+
         this.cursors = this.input.keyboard!.createCursorKeys();
 
         this.add.image(400, 300, 'sky')
@@ -77,16 +80,41 @@ export class Game extends Scene
         });
 
         this.physics.add.collider(this.stars.getChildren(), this.platforms);
+
+        let collectStar =  (player:any, star:any) =>
+            {
+                star.disableBody(true, true);
+                this.score += 10;
+                this.scoreText.setText('Score: ' + this.score)
+    
+                if (this.stars.countActive(true) === 0)
+                {
+                    this.stars.children.iterate(function (child:any) {
+                        child.enableBody(true, child.x, 0, true, true);
+                    });
+    
+                    let x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+    
+                    let bomb = this.bombs.create(x, 16, 'bomb');
+                    bomb.setBounce(1);
+                    bomb.setCollideWorldBounds(true);
+                    bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+                }
+            };
+
         this.physics.add.overlap(this.player, this.stars, collectStar, null, this);
 
         this.score = 0;
 
-        function collectStar (player:any, star:any)
+        function hitBomb (player:any, bomb:any)
         {
-            star.disableBody(true, true);
-            this.score += 10;
-            this.scoreText.setText('Score: ' + this.score)
+            this.physics.pause();
+            player.setTint(0xff0000);
+            player.anims.play('turn');
+            this.gameOver = true;
         }
+        this.physics.add.collider(this.bombs, this.platforms);
+        this.physics.add.collider(this.player, this.bombs, hitBomb, null, this)
 
         this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '$000' });
 
