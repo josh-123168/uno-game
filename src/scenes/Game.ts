@@ -1,149 +1,107 @@
 import { Scene } from 'phaser';
 
-export class Game extends Scene
-{
-    platforms: Phaser.Physics.Arcade.StaticGroup;
-    player: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-    cursors: Phaser.Types.Input.Keyboard.CursorKeys;
-    stars: any;
-    score: any;
-    scoreText: any;
-    bombs: any
+let message;
+let messageBackground;
 
-    constructor ()
-    {
+function createDeck() {
+    const colors = ['red','green','yellow','blue','wild'];
+    const values = ['0','1','2','3','4','5','6','7','8','9','Draw','Reverse','Skip','Wild_Draw','Wild'];
+    let deck = [];
+    colors.forEach(color=>{
+        values.forEach(value=>{
+            deck.push({colo:color,value:value});
+        });
+    });
+    Phaser.Utils.Array.Shuffle(deck);
+    return deck;
+}
+
+function dealCards(deck,scene) {
+    const cardWidth = 85;
+    const cardHeight = 128;
+    const playPileStart = {x:95,y:300};
+    const cardSpacing = 5;
+    const pileSpacing = 64;
+
+    const positions = calculatePositions(playPileStart,cardWidth,cardSpacing);
+
+    let allCards = [];
+    let playedCards = [];
+
+    let drawPile = scene.add.image(400,500,"card_back");
+    drawPile.displayWidth = cardWidth;
+    drawPile.displayHeight = cardHeight;
+    drawPile.setData("type","drawPile");
+    drawPile.setInteractive({cursor: "pointer"});
+    // let playPile = scene.add.image(placeholder);
+    // playPile.displayWidth = cardWidth;
+    // playPile.displayHeight = cardHeight;
+    // playPile.setData("type","playPile")
+
+    for(let i=0; i<15; i++) {
+        let card = deck.pop();
+        let cardSprite = createCardSprite(scene,card,positions[i],i<18);
+        allCards.push(cardSprite);
+
+        handleCardInteraction(scene,cardSprite,playPile,allCards,playedCards);
+    }
+    scene.drawPileCards = [];
+    for(let i=0; i<deck.length;i++) {
+        let card = deck[i];
+        let cardSprite = createCardSprite(scene,card,{x:drawPile,y:drawPile.y}, true, true);
+        scene.drawPileCards.push(cardSprite);
+    }
+    handleDrawPileClick(scene,drawPile,playPile,allCards,playedCards);
+}
+
+function calculatePositions(playPileStart,cardWidth,cardSpacing,pileSpacing) {
+    return [
+        {x:playPileStart.x+1.5*(cardWidth+cardSpacing),y:playPileStart.y-3*pileSpacing}
+    ]
+}
+
+export class Game extends Scene {
+
+    constructor() {
         super('Game');
     }
 
-    preload ()
-    {
-        this.load.image('sky', 'assets/sky.png');
-        this.load.image('ground', 'assets/platform.png');
-        this.load.image('star', 'assets/star.png');
-        this.load.image('bomb', 'assets/bomb.png');
-        this.load.spritesheet('dude', 
-            'assets/dude.png',
-            { frameWidth: 32, frameHeight: 48 }
-        );
+    preload() {
+        const colors = ['red','green','yellow','blue','wild'];
+        const values = ['0','1','2','3','4','5','6','7','8','9','Draw','Reverse','Skip','Wild_Draw','Wild'];
+
+        colors.forEach(color=>{
+            values.forEach(value=>{
+                this.load.image(`${color}_${value}`,`assets/${color}/${color}_${value}.png`)
+            });
+        });
+        this.load.image('card_back','assets/Deck.png');
+        this.load.image('background','assets/Table_1.png');
     }
 
-    create ()
-    {
-        this.bombs = this.physics.add.group();
+    create() {
+        let background = this.add.image(0,0,'background');
+        background.setOrigin(0,0);
+        background.displayWidth = this.sys.canvas.width;
+        background.displayHeight = this.sys.canvas.height;
 
-        this.cursors = this.input.keyboard!.createCursorKeys();
+        let cardDeck = createDeck();
+        dealCards(cardDeck,this);
+        message = this.add.text(config.width/2,config.height/2, 'Hello Player',
+        {fontSize:'50px',fill:'#f5f5f5',fontStyle:'bold',align:'center'});
+        message.setOrigin(0.5);
+        message.setAlpha(0);
 
-        this.add.image(400, 300, 'sky')
+        messageBackground = this.add.graphics();
+        messageBackground.fillStyle(0xbf0a3a,1);
+        messageBackground.setVisible(false);
 
-        this.platforms = this.physics.add.staticGroup();
+        messageBackground.fillRoundedRect(config.width/2 - message.width/2 -10,
+        config.height/2 - message.height/2-10,message.width+20,message.height+20,5);
 
-        this.platforms.create(400, 568, 'ground').setScale(2).refreshBody();
-        this.platforms.create(600, 400, 'ground');
-        this.platforms.create(50, 250, 'ground');
-        this.platforms.create(750, 220, 'ground');
-
-        this.player = this.physics.add.sprite(100, 450, 'dude');
-
-        this.player.setBounce(0.2);
-        this.player.setCollideWorldBounds(true);
-        this.physics.add.collider(this.player, this.platforms);
-
-        this.anims.create({
-            key: 'left',
-            frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
-            frameRate: 10,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: 'turn',
-            frames: [ { key: 'dude', frame: 4 } ],
-            frameRate: 20
-        });
-
-        this.anims.create({
-            key: 'right',
-            frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
-            frameRate: 10,
-            repeat: -1
-        });
-
-        this.stars = this.physics.add.group({
-            key: 'star',
-            repeat: 11,
-            setXY: { x: 12, y: 0, stepX: 70 }
-        });
-
-        this.stars.children.iterate(function (star:any) {
-            star.setBounceY(Phaser.Math.FloatBetween(0.4,0.8));
-            return null;
-        });
-
-        this.physics.add.collider(this.stars.getChildren(), this.platforms);
-
-        let collectStar =  (player:any, star:any) =>
-            {
-                star.disableBody(true, true);
-                this.score += 10;
-                this.scoreText.setText('Score: ' + this.score)
-    
-                if (this.stars.countActive(true) === 0)
-                {
-                    this.stars.children.iterate(function (child:any) {
-                        child.enableBody(true, child.x, 0, true, true);
-                    });
-    
-                    let x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
-    
-                    let bomb = this.bombs.create(x, 16, 'bomb');
-                    bomb.setBounce(1);
-                    bomb.setCollideWorldBounds(true);
-                    bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
-                }
-            };
-
-        this.physics.add.overlap(this.player, this.stars, collectStar, null, this);
-
-        this.score = 0;
-
-        function hitBomb (player:any, bomb:any)
-        {
-            this.physics.pause();
-            player.setTint(0xff0000);
-            player.anims.play('turn');
-            this.gameOver = true;
-        }
-        this.physics.add.collider(this.bombs, this.platforms);
-        this.physics.add.collider(this.player, this.bombs, hitBomb, null, this)
-
-        this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '$000' });
-
+        this.children.bringToTop(message);
     }
 
-    update ()
-    {
-        if (this.cursors.left.isDown)
-            {
-                this.player.setVelocityX(-160);
-            
-                this.player.anims.play('left', true);
-            }
-            else if (this.cursors.right.isDown)
-            {
-                this.player.setVelocityX(160);
-            
-                this.player.anims.play('right', true);
-            }
-            else
-            {
-                this.player.setVelocityX(0);
-            
-                this.player.anims.play('turn');
-            }
-            
-            if (this.cursors.up.isDown && this.player.body.touching.down)
-            {
-                this.player.setVelocityY(-330);
-            }
+    update() {
     }
 }
