@@ -33,10 +33,10 @@ function dealCards(deck,scene) {
     drawPile.displayHeight = cardHeight;
     drawPile.setData("type","drawPile");
     drawPile.setInteractive({cursor: "pointer"});
-    // let playPile = scene.add.image(placeholder);
-    // playPile.displayWidth = cardWidth;
-    // playPile.displayHeight = cardHeight;
-    // playPile.setData("type","playPile")
+    let playPile = scene.add.image(600,500,"red_3");
+    playPile.displayWidth = cardWidth;
+    playPile.displayHeight = cardHeight;
+    playPile.setData("type","playPile")
 
     for(let i=0; i<15; i++) {
         let card = deck.pop();
@@ -58,6 +58,16 @@ function calculatePositions(playPileStart,cardWidth,cardSpacing,pileSpacing) {
     return [
         {x:playPileStart.x+1.5*(cardWidth+cardSpacing),y:playPileStart.y-3*pileSpacing}
     ]
+}
+
+function createCardSprite(scene,card,position,isFaceDown,isFromDrawPile = false) {
+    let cardSprite = scene.add.image(position.x,position.y,isFaceDown?"card_back":`${card.color}-${card.value}`);
+    cardSprite.setData("card",card);
+    if(!isFromDrawPile)
+        cardSprite.setInteractive({cursor:'pointer'});
+    cardSprite.displayWidth = 85;
+    cardSprite.displayHeight = 128;
+    return cardSprite;
 }
 
 export class Game extends Scene {
