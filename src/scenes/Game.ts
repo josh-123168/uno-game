@@ -1,5 +1,8 @@
 import { Scene } from 'phaser';
 
+const WIDTH = 1000;
+const HEIGHT = 700;
+
 export class Game extends Scene {
 
     constructor() {
@@ -9,12 +12,16 @@ export class Game extends Scene {
     preload() {
         const colors = ['Red','Green','Yellow','Blue'];
         const values = ['0','1','2','3','4','5','6','7','8','9','Draw','Reverse','Skip'];
+        const wilds = ['Wild_Wild','Wild_Draw']
 
         colors.forEach(color=>{
             values.forEach(value=>{
                 this.load.image(`${color}_${value}`,`assets/${color}_${value}.png`)
             });
         });
+        wilds.forEach(wild=>{
+            this.load.image(`${wild}`,`assets/${wild}.png`)
+        })
         this.load.image('card_back','assets/Deck.png');
         this.load.image('background','assets/Table_1.png');
     }
@@ -30,7 +37,7 @@ export class Game extends Scene {
 
         let cardDeck = createDeck();
         dealCards(cardDeck,this);
-        message = this.add.text(config.width/2,config.height/2, 'Hello Player',
+        message = this.add.text(WIDTH/2,HEIGHT/2, 'Hello Player',
         {fontSize:'50px',fill:'#f5f5f5',fontStyle:'bold',align:'center'});
         message.setOrigin(0.5);
         message.setAlpha(0);
@@ -39,15 +46,16 @@ export class Game extends Scene {
         messageBackground.fillStyle(0xbf0a3a,1);
         messageBackground.setVisible(false);
 
-        messageBackground.fillRoundedRect(config.width/2 - message.width/2 -10,
-        config.height/2 - message.height/2-10,message.width+20,message.height+20,5);
+        messageBackground.fillRoundedRect(WIDTH/2 - message.width/2 -10,
+        HEIGHT/2 - message.height/2-10,message.width+20,message.height+20,5);
 
         this.children.bringToTop(message);
 
         function createDeck() {
-            const colors = ['red','green','yellow','blue','wild'];
-            const values = ['0','1','2','3','4','5','6','7','8','9','Draw','Reverse','Skip','Wild_Draw','Wild'];
-            let deck = [];
+            const colors = ['Red','Green','Yellow','Blue'];
+            const values = ['0','1','2','3','4','5','6','7','8','9','Draw','Reverse','Skip'];
+            const wilds = ['Wild_Wild', 'Wild_Draw']
+            let deck: {color: string, value: string}[] = [];
             colors.forEach(color=>{
                 values.forEach(value=>{
                     deck.push({color:color,value:value});
@@ -74,7 +82,7 @@ export class Game extends Scene {
             drawPile.displayHeight = cardHeight;
             drawPile.setData("type","drawPile");
             drawPile.setInteractive({cursor: "pointer"});
-            let playPile = scene.add.image(600,500,"Red_3");
+            let playPile = scene.add.image(600,500,"Wild_Draw");
             playPile.displayWidth = cardWidth;
             playPile.displayHeight = cardHeight;
             playPile.setData("type","playPile")
@@ -108,7 +116,7 @@ export class Game extends Scene {
                 {x:yourPileStart.x+7*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
                 {x:yourPileStart.x+8*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
 
-                {x:yourPileStart.x+(cardWidth/2+cardSpacing),y:yourPileStart.y-pileSpacing},
+                {x:yourPileStart.x+0.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
                 {x:yourPileStart.x+1.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
                 {x:yourPileStart.x+2.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
                 {x:yourPileStart.x+3.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
