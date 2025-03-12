@@ -20,7 +20,7 @@ export class Game extends Scene {
             });
         });
         wilds.forEach(wild=>{
-            this.load.image(`${wild}`,`assets/${wild}.png`)
+            this.load.image(`${wild}`,`assets/_${wild}.png`)
         })
         this.load.image('card_back','assets/Deck.png');
         this.load.image('background','assets/Table_1.png');
@@ -53,13 +53,34 @@ export class Game extends Scene {
 
         function createDeck() {
             const colors = ['Red','Green','Yellow','Blue'];
-            const values = ['0','1','2','3','4','5','6','7','8','9','Draw','Reverse','Skip'];
-            const wilds = ['Wild_Wild', 'Wild_Draw']
+            const values = {
+                '0': 1,
+                '1': 2,
+                '2': 2,
+                '3': 2,
+                '4': 2,
+                '5': 2,
+                '6': 2,
+                '7': 2,
+                '8': 2,
+                '9': 2,
+                'Draw': 2,
+                'Reverse': 2,
+                'Skip': 2,
+            };
+            const wilds = {'Wild_Wild': 4, 'Wild_Draw': 4};
             let deck: {color: string, value: string}[] = [];
             colors.forEach(color=>{
-                values.forEach(value=>{
+                Object.entries(values).forEach(([value, num])=>{
+                    for (let i = 0; i < num; i++){
                     deck.push({color:color,value:value});
+                    }
                 });
+            });
+            Object.entries(wilds).forEach(([key, value])=>{
+                for (let i = 0; i < value; i++){
+                deck.push({color:"",value:key});
+                }
             });
             Phaser.Utils.Array.Shuffle(deck);
             return deck;
