@@ -20,7 +20,7 @@ export class Game extends Scene {
             });
         });
         wilds.forEach(wild=>{
-            this.load.image(`${wild}`,`assets/_${wild}.png`)
+            this.load.image(`_${wild}`,`assets/_${wild}.png`)
         })
         this.load.image('card_back','assets/Deck.png');
         this.load.image('background','assets/Table_1.png');
@@ -86,37 +86,54 @@ export class Game extends Scene {
             return deck;
         }
 
+        function pickFirstCard(firstCard) {
+            if (firstCard.color == "") {
+                return "Red_1";
+            } else {
+                return `${firstCard.color}_${firstCard.value}`;
+            }
+        }
+
         function dealCards(deck,scene) {
             const cardWidth = 85;
             const cardHeight = 128;
-            const yourPileStart = {x:95,y:300};
+            // const yourPileStart = {x:95,y:300};
             const cardSpacing = 5;
+            // const pileSpacing = 64;
+            const yourPileStart = {x:95,y:650};
             const pileSpacing = 64;
+            const oppPileStart = {x:95,y:175};
 
-            const positions = calculatePositions(yourPileStart,cardWidth,cardSpacing,pileSpacing);
+            const positions = calculatePositions(yourPileStart,cardWidth,cardSpacing,pileSpacing,oppPileStart);
 
             let allCards = [];
             let playedCards = [];
 
-            let drawPile = scene.add.image(400,500,"card_back");
+            let drawPile = scene.add.image(400,350,"card_back");
             drawPile.displayWidth = cardWidth;
             drawPile.displayHeight = cardHeight;
             drawPile.setData("type","drawPile");
             drawPile.setInteractive({cursor: "pointer"});
-            let playPile = scene.add.image(600,500,"Wild_Draw");
+
+            let firstCard = deck[0];
+            let playPile = scene.add.image(600,350,pickFirstCard(firstCard));
             playPile.displayWidth = cardWidth;
             playPile.displayHeight = cardHeight;
             playPile.setData("type","playPile")
 
-            for(let i=0; i<28; i++) {
+            //all player piles loop
+            for(let i=0; i<14; i++) {
                 let card = deck.pop();
-                let cardSprite = createCardSprite(scene,card,positions[i],i<18);
+                let cardSprite = createCardSprite(scene,card,positions[i],i<7);
                 allCards.push(cardSprite);
 
                 // handleCardInteraction(scene,cardSprite,playPile,allCards,playedCards);
             }
+
             scene.drawPileCards = [];
-            for(let i=0; i<deck.length;i++) {
+
+            //draw pile loop
+            for(let i=0; i<deck.length; i++) {
                 let card = deck[i];
                 let cardSprite = createCardSprite(scene,card,{x:drawPile,y:drawPile.y},true,true);
                 scene.drawPileCards.push(cardSprite);
@@ -124,20 +141,16 @@ export class Game extends Scene {
             // handleDrawPileClick(scene,drawPile,playPile,allCards,playedCards);
         }
 
-        function calculatePositions(yourPileStart,cardWidth,cardSpacing,pileSpacing) {
+        function calculatePositions(yourPileStart,cardWidth,cardSpacing,pileSpacing,oppPileStart) {
             return [
-                {x:yourPileStart.x+1.5*(cardWidth+cardSpacing),y:yourPileStart.y-3*pileSpacing},
-                {x:yourPileStart.x+4.5*(cardWidth+cardSpacing),y:yourPileStart.y-3*pileSpacing},
-                {x:yourPileStart.x+7.5*(cardWidth+cardSpacing),y:yourPileStart.y-3*pileSpacing},
-            
-                {x:yourPileStart.x+(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
-                {x:yourPileStart.x+2*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
-                {x:yourPileStart.x+4*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
-                {x:yourPileStart.x+5*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
-                {x:yourPileStart.x+7*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
-                {x:yourPileStart.x+8*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
+                {x:yourPileStart.x+1.5*(cardWidth+cardSpacing),y:oppPileStart.y-pileSpacing},
+                {x:yourPileStart.x+2.5*(cardWidth+cardSpacing),y:oppPileStart.y-pileSpacing},
+                {x:yourPileStart.x+3.5*(cardWidth+cardSpacing),y:oppPileStart.y-pileSpacing},
+                {x:yourPileStart.x+4.5*(cardWidth+cardSpacing),y:oppPileStart.y-pileSpacing},
+                {x:yourPileStart.x+5.5*(cardWidth+cardSpacing),y:oppPileStart.y-pileSpacing},
+                {x:yourPileStart.x+6.5*(cardWidth+cardSpacing),y:oppPileStart.y-pileSpacing},
+                {x:yourPileStart.x+7.5*(cardWidth+cardSpacing),y:oppPileStart.y-pileSpacing},
 
-                {x:yourPileStart.x+0.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
                 {x:yourPileStart.x+1.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
                 {x:yourPileStart.x+2.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
                 {x:yourPileStart.x+3.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
@@ -145,18 +158,37 @@ export class Game extends Scene {
                 {x:yourPileStart.x+5.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
                 {x:yourPileStart.x+6.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
                 {x:yourPileStart.x+7.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
-                {x:yourPileStart.x+8.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
+                // {x:yourPileStart.x+1.5*(cardWidth+cardSpacing),y:yourPileStart.y-3*pileSpacing},
+                // {x:yourPileStart.x+4.5*(cardWidth+cardSpacing),y:yourPileStart.y-3*pileSpacing},
+                // {x:yourPileStart.x+7.5*(cardWidth+cardSpacing),y:yourPileStart.y-3*pileSpacing},
+            
+                // {x:yourPileStart.x+(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
+                // {x:yourPileStart.x+2*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
+                // {x:yourPileStart.x+4*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
+                // {x:yourPileStart.x+5*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
+                // {x:yourPileStart.x+7*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
+                // {x:yourPileStart.x+8*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
 
-                {x:yourPileStart.x,y:yourPileStart.y},
-                {x:yourPileStart.x+(cardWidth+cardSpacing),y:yourPileStart.y},
-                {x:yourPileStart.x+2*(cardWidth+cardSpacing),y:yourPileStart.y},
-                {x:yourPileStart.x+3*(cardWidth+cardSpacing),y:yourPileStart.y},
-                {x:yourPileStart.x+4*(cardWidth+cardSpacing),y:yourPileStart.y},
-                {x:yourPileStart.x+5*(cardWidth+cardSpacing),y:yourPileStart.y},
-                {x:yourPileStart.x+6*(cardWidth+cardSpacing),y:yourPileStart.y},
-                {x:yourPileStart.x+7*(cardWidth+cardSpacing),y:yourPileStart.y},
-                {x:yourPileStart.x+8*(cardWidth+cardSpacing),y:yourPileStart.y},
-                {x:yourPileStart.x+9*(cardWidth+cardSpacing),y:yourPileStart.y},
+                // {x:yourPileStart.x+0.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
+                // {x:yourPileStart.x+1.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
+                // {x:yourPileStart.x+2.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
+                // {x:yourPileStart.x+3.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
+                // {x:yourPileStart.x+4.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
+                // {x:yourPileStart.x+5.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
+                // {x:yourPileStart.x+6.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
+                // {x:yourPileStart.x+7.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
+                // {x:yourPileStart.x+8.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
+
+                // {x:yourPileStart.x,y:yourPileStart.y},
+                // {x:yourPileStart.x+(cardWidth+cardSpacing),y:yourPileStart.y},
+                // {x:yourPileStart.x+2*(cardWidth+cardSpacing),y:yourPileStart.y},
+                // {x:yourPileStart.x+3*(cardWidth+cardSpacing),y:yourPileStart.y},
+                // {x:yourPileStart.x+4*(cardWidth+cardSpacing),y:yourPileStart.y},
+                // {x:yourPileStart.x+5*(cardWidth+cardSpacing),y:yourPileStart.y},
+                // {x:yourPileStart.x+6*(cardWidth+cardSpacing),y:yourPileStart.y},
+                // {x:yourPileStart.x+7*(cardWidth+cardSpacing),y:yourPileStart.y},
+                // {x:yourPileStart.x+8*(cardWidth+cardSpacing),y:yourPileStart.y},
+                // {x:yourPileStart.x+9*(cardWidth+cardSpacing),y:yourPileStart.y},
             ];
         }
 
