@@ -121,10 +121,10 @@ export class Game extends Scene {
             playPile.displayHeight = cardHeight;
             playPile.setData("type","playPile")
 
-            //all player piles loop
+            //all piles loop
             for(let i=0; i<14; i++) {
                 let card = deck.pop();
-                let cardSprite = createCardSprite(scene,card,positions[i],i<7);
+                let cardSprite = createCardSprite(scene,card,positions[i],i<7,false);
                 allCards.push(cardSprite);
 
                 // handleCardInteraction(scene,cardSprite,playPile,allCards,playedCards);
@@ -158,37 +158,6 @@ export class Game extends Scene {
                 {x:yourPileStart.x+5.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
                 {x:yourPileStart.x+6.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
                 {x:yourPileStart.x+7.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
-                // {x:yourPileStart.x+1.5*(cardWidth+cardSpacing),y:yourPileStart.y-3*pileSpacing},
-                // {x:yourPileStart.x+4.5*(cardWidth+cardSpacing),y:yourPileStart.y-3*pileSpacing},
-                // {x:yourPileStart.x+7.5*(cardWidth+cardSpacing),y:yourPileStart.y-3*pileSpacing},
-            
-                // {x:yourPileStart.x+(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
-                // {x:yourPileStart.x+2*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
-                // {x:yourPileStart.x+4*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
-                // {x:yourPileStart.x+5*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
-                // {x:yourPileStart.x+7*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
-                // {x:yourPileStart.x+8*(cardWidth+cardSpacing),y:yourPileStart.y-2*pileSpacing},
-
-                // {x:yourPileStart.x+0.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
-                // {x:yourPileStart.x+1.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
-                // {x:yourPileStart.x+2.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
-                // {x:yourPileStart.x+3.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
-                // {x:yourPileStart.x+4.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
-                // {x:yourPileStart.x+5.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
-                // {x:yourPileStart.x+6.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
-                // {x:yourPileStart.x+7.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
-                // {x:yourPileStart.x+8.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
-
-                // {x:yourPileStart.x,y:yourPileStart.y},
-                // {x:yourPileStart.x+(cardWidth+cardSpacing),y:yourPileStart.y},
-                // {x:yourPileStart.x+2*(cardWidth+cardSpacing),y:yourPileStart.y},
-                // {x:yourPileStart.x+3*(cardWidth+cardSpacing),y:yourPileStart.y},
-                // {x:yourPileStart.x+4*(cardWidth+cardSpacing),y:yourPileStart.y},
-                // {x:yourPileStart.x+5*(cardWidth+cardSpacing),y:yourPileStart.y},
-                // {x:yourPileStart.x+6*(cardWidth+cardSpacing),y:yourPileStart.y},
-                // {x:yourPileStart.x+7*(cardWidth+cardSpacing),y:yourPileStart.y},
-                // {x:yourPileStart.x+8*(cardWidth+cardSpacing),y:yourPileStart.y},
-                // {x:yourPileStart.x+9*(cardWidth+cardSpacing),y:yourPileStart.y},
             ];
         }
 
@@ -200,6 +169,109 @@ export class Game extends Scene {
             cardSprite.displayWidth = 85;
             cardSprite.displayHeight = 128;
             return cardSprite;
+        }
+
+        function handleCardInteraction(scene,cardSprite,playPile,allCards,playedCards)
+        {
+            cardSprite.on("pointerdown",function(pointer){
+                let topCardData = playPile.getData("topCard");
+                if(topCardData == undefined)
+                    return;
+                let cardData = cardSprite.getData("card");
+                let key = `${cardData.color}_${cardData.value}`;
+                if(isDifferenceOne(topCardData,cardData) && isCardFree(cardSprite,allCards)) {
+                    scene.tweens.add({
+                        targets: cardSprite,
+                        x: playPile.x,
+                        y: playPile.y,
+                        duration: 500,
+                        ease: 'Power2',
+                        onComplete: function() {
+                            cardSprite.setTexture(key);
+                            playPile.setData("topCard",cardData);
+                            scene.children.bringToTop(cardSprite);
+                            cardSprite.disableInteractive();
+                            checkAndFlipFreeCards(allCards);
+                            playedCards.push(cardSprite);
+                            checkForEndGame(scene.drawPileCards,playedCards,allCards,cardData);
+                        }
+                    });
+                }                
+            });
+        }
+
+        function isCardFree(card,allCards) {
+            const cardX = card.x;
+            const cardY = card.y;
+            const cardWidth = card.displayWidth;
+
+            for(let i=0; i<allCards.length; i++) {
+                let otherCard = allCards[i];
+                if(otherCard === card) continue;
+                if (
+                    otherCard.y === cardY+64 &&
+                    otherCard.x >= cardX - (cardWidth) &&
+                    otherCard.x <= cardX + (cardWidth)
+                ) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        //isValueMatch
+        function isDifferenceOne(card1,card2) {
+            const values1 = getCardValue(card1);
+            const values2 = getCardValue(card2);
+            return values1.some(val1=>values2.some(val2=>Math.abs(val1-val2)===1));
+        }
+
+        function getCardValue(card) {
+            const valueMap = {
+                '0':0,
+                '1':1,
+                '2':2,
+                '3':3,
+                '4':4,
+                '5':5,
+                '6':6,
+                '7':7,
+                '8':8,
+                '9':9,
+                'Draw':10,
+                'Reverse':11,
+                'Skip':12,
+                'Wild_Wild':13,
+                'Wild_Draw':14,
+            }
+            return [valueMap[card.value]];
+        }
+
+        function checkAndFlipFreeCards(allCards) {
+            for(let i=0;i<allCards.length;i++) {
+                let key = allCards[i].data.list.card.color+"_"+allCards[i].data.list.card.value;
+                if(isCardFree(allCards[i],allCards))
+                    allCards[i].setTexture(key);
+            }
+        }
+
+        function handleDrawPileClick(scene,drawPile,playPile,allCards,playedCards) {
+            drawPile.on("pointerdown",function(pointer)){
+                if(scene.drawPileCards.length === 0)
+                    return;
+                let topCard = scene.drawPileCards.pop();
+                let cardData = topCard.getData("card");
+                let key = `${cardData.color}_${cardData.value}`;
+
+                let cardSprite = scene.add.image(drawPile.x,drawPile.y,"card_back");
+                cardSprite.displayWidth = topCard.displayWidth;
+                cardSprite.displayHeight = topCard.displayHeight;
+                cardSprite.setData("card",cardData);
+
+                scene.tweens.add({
+                    
+                })
+            }
         }
     }
 
