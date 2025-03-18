@@ -27,8 +27,8 @@ export class Game extends Scene {
     }
 
     create() {
-        let message;
-        let messageBackground;
+        let message: Phaser.GameObjects.GameObject;
+        let messageBackground: Phaser.GameObjects.Graphics;
 
         let background = this.add.image(0,0,'background');
         background.setOrigin(0,0);
@@ -256,7 +256,7 @@ export class Game extends Scene {
         }
 
         function handleDrawPileClick(scene,drawPile,playPile,allCards,playedCards) {
-            drawPile.on("pointerdown",function(pointer)){
+            drawPile.on("pointerdown",function(pointer){
                 if(scene.drawPileCards.length === 0)
                     return;
                 let topCard = scene.drawPileCards.pop();
@@ -269,9 +269,57 @@ export class Game extends Scene {
                 cardSprite.setData("card",cardData);
 
                 scene.tweens.add({
-                    
-                })
+                    targets:cardSprite,
+                    x:playPile.x,
+                    y:playPile.y,
+                    duration:500,
+                    ease: "Power2",
+                    onComplete: function() {
+                        cardSprite.setTexture(key);
+                        scene.children.bringToTop(cardSprite);
+                        if(scene.drawPileCards.length === 0) {
+                            scene.add.image(drawPile.x,drawPile.y,"");
+                        }
+                        playPile.setData("topCard",cardData);
+                        checkForEndGame(scene.drawPileCards,playedCards,allCards,topCard.data.list.card);
+                    }
+                });
+            });
+        }
+
+        function checkForEndGame(drawPileCards,playedCards,allCards,topCard) {
+            if(drawPileCards.length === 0 && !isThereAnyLegalMove(allCards,topCard,playedCards)) {
+                displayEndMessage("You Lost!");
             }
+            if(playedCards.length === 28) {
+                displayEndMessage("You Won!",0x048738);
+            }
+        }
+
+        function displayEndMessage(messageText,bgColor=0xbf0a3a) {
+            messageBackground.clear();
+            messageBackground.fillStyle(bgColor,1);
+            const padding = 10;
+            messageBackground.fillRoundedRect(
+                WIDTH/2-message.width/2-padding,
+                HEIGHT/2-message.height/2-padding,
+                message.width+2*padding,
+                message.height+2*padding,
+                5
+            );
+            messageBackground.setVisible(true);
+            message.setText(messageText);
+            message.setAlpha(1);
+        }
+
+        function isThereAnyLegalMove(allCards,topCard,playedCards) {
+            allCards = allCards.filter(item=>!playedCards.includes(item));
+            for(let i=0; i<allCards.length; i++) {
+                if(isCardFree(allCards[i],allCards) && isDifferenceOne(allCards[i].data.list.card,topCard)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
