@@ -127,7 +127,7 @@ export class Game extends Scene {
                 let cardSprite = createCardSprite(scene,card,positions[i],i<7,false);
                 allCards.push(cardSprite);
 
-                // handleCardInteraction(scene,cardSprite,playPile,allCards,playedCards);
+                handleCardInteraction(scene,cardSprite,playPile,allCards,playedCards);
             }
 
             scene.drawPileCards = [];
@@ -138,7 +138,7 @@ export class Game extends Scene {
                 let cardSprite = createCardSprite(scene,card,{x:drawPile,y:drawPile.y},true,true);
                 scene.drawPileCards.push(cardSprite);
             }
-            // handleDrawPileClick(scene,drawPile,playPile,allCards,playedCards);
+            handleDrawPileClick(scene,drawPile,playPile,allCards,playedCards);
         }
 
         function calculatePositions(yourPileStart,cardWidth,cardSpacing,pileSpacing,oppPileStart) {
@@ -171,6 +171,7 @@ export class Game extends Scene {
             return cardSprite;
         }
 
+
         function handleCardInteraction(scene,cardSprite,playPile,allCards,playedCards)
         {
             cardSprite.on("pointerdown",function(pointer){
@@ -179,7 +180,7 @@ export class Game extends Scene {
                     return;
                 let cardData = cardSprite.getData("card");
                 let key = `${cardData.color}_${cardData.value}`;
-                if(isDifferenceOne(topCardData,cardData) && isCardFree(cardSprite,allCards)) {
+                if(isValueMatch(topCardData,cardData) || isColorMatch(topCardData,cardData) && isCardFree(cardSprite,allCards)) {
                     scene.tweens.add({
                         targets: cardSprite,
                         x: playPile.x,
@@ -201,29 +202,34 @@ export class Game extends Scene {
         }
 
         function isCardFree(card,allCards) {
-            const cardX = card.x;
-            const cardY = card.y;
-            const cardWidth = card.displayWidth;
+            // const cardX = card.x;
+            // const cardY = card.y;
+            // const cardWidth = card.displayWidth;
 
-            for(let i=0; i<allCards.length; i++) {
-                let otherCard = allCards[i];
-                if(otherCard === card) continue;
-                if (
-                    otherCard.y === cardY+64 &&
-                    otherCard.x >= cardX - (cardWidth) &&
-                    otherCard.x <= cardX + (cardWidth)
-                ) {
-                    return false;
-                }
-            }
+            // for(let i=0; i<allCards.length; i++) {
+            //     let otherCard = allCards[i];
+            //     if(otherCard === card) continue;
+            //     if (
+            //         otherCard.y === cardY+64 &&
+            //         otherCard.x >= cardX - (cardWidth) &&
+            //         otherCard.x <= cardX + (cardWidth)
+            //     ) {
+            //         return false;
+            //     }
+            // }
             return true;
         }
 
-        //isValueMatch
-        function isDifferenceOne(card1,card2) {
+        //checks for matching values between cards
+        function isValueMatch(card1,card2) {
             const values1 = getCardValue(card1);
             const values2 = getCardValue(card2);
-            return values1.some(val1=>values2.some(val2=>Math.abs(val1-val2)===1));
+            return values1.some(val1=>values2.some(val2=>Math.abs(val1-val2)===0));
+        }
+
+        //checks for matching colors between cards
+        function isColorMatch(card1,card2) {
+            return card1.color===card2.color;
         }
 
         function getCardValue(card) {
@@ -296,7 +302,7 @@ export class Game extends Scene {
             }
         }
 
-        function displayEndMessage(messageText,bgColor=0xbf0a3a) {
+        function displayEndMessage(messageText: string,bgColor=0xbf0a3a) {
             messageBackground.clear();
             messageBackground.fillStyle(bgColor,1);
             const padding = 10;
@@ -313,9 +319,9 @@ export class Game extends Scene {
         }
 
         function isThereAnyLegalMove(allCards,topCard,playedCards) {
-            allCards = allCards.filter(item=>!playedCards.includes(item));
+            allCards = allCards.filter((item: any)=>!playedCards.includes(item));
             for(let i=0; i<allCards.length; i++) {
-                if(isCardFree(allCards[i],allCards) && isDifferenceOne(allCards[i].data.list.card,topCard)) {
+                if(isCardFree(allCards[i],allCards) && isValueMatch (allCards[i].data.list.card,topCard)) {
                     return true;
                 }
             }
