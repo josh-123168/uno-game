@@ -24,6 +24,7 @@ export class Game extends Scene {
         })
         this.load.image('card_back','assets/Deck.png');
         this.load.image('background','assets/Table_1.png');
+        this.load.image('empty', 'assets/Empty.png')
     }
 
     create() {
@@ -86,20 +87,10 @@ export class Game extends Scene {
             return deck;
         }
 
-        function pickFirstCard(firstCard) {
-            if (firstCard.color == "") {
-                return "Red_1";
-            } else {
-                return `${firstCard.color}_${firstCard.value}`;
-            }
-        }
-
         function dealCards(deck,scene) {
             const cardWidth = 85;
             const cardHeight = 128;
-            // const yourPileStart = {x:95,y:300};
             const cardSpacing = 5;
-            // const pileSpacing = 64;
             const yourPileStart = {x:95,y:650};
             const pileSpacing = 64;
             const oppPileStart = {x:95,y:175};
@@ -116,12 +107,12 @@ export class Game extends Scene {
             drawPile.setInteractive({cursor: "pointer"});
 
             let firstCard = deck[0];
-            let playPile = scene.add.image(600,350,pickFirstCard(firstCard));
+            let playPile = scene.add.image(600,350,"empty");
             playPile.displayWidth = cardWidth;
             playPile.displayHeight = cardHeight;
             playPile.setData("type","playPile")
 
-            //all piles loop
+            //all hands loop
             for(let i=0; i<14; i++) {
                 let card = deck.pop();
                 let cardSprite = createCardSprite(scene,card,positions[i],i<7,false);
@@ -141,8 +132,17 @@ export class Game extends Scene {
             handleDrawPileClick(scene,drawPile,playPile,allCards,playedCards);
         }
 
+        // function pickFirstCard(firstCard) {
+        //     if (firstCard.color == "") {
+        //         return "Red_1";
+        //     } else {
+        //         return `${firstCard.color}_${firstCard.value}`;
+        //     }
+        // }
+
         function calculatePositions(yourPileStart,cardWidth,cardSpacing,pileSpacing,oppPileStart) {
             return [
+                //opp hand
                 {x:yourPileStart.x+1.5*(cardWidth+cardSpacing),y:oppPileStart.y-pileSpacing},
                 {x:yourPileStart.x+2.5*(cardWidth+cardSpacing),y:oppPileStart.y-pileSpacing},
                 {x:yourPileStart.x+3.5*(cardWidth+cardSpacing),y:oppPileStart.y-pileSpacing},
@@ -150,7 +150,8 @@ export class Game extends Scene {
                 {x:yourPileStart.x+5.5*(cardWidth+cardSpacing),y:oppPileStart.y-pileSpacing},
                 {x:yourPileStart.x+6.5*(cardWidth+cardSpacing),y:oppPileStart.y-pileSpacing},
                 {x:yourPileStart.x+7.5*(cardWidth+cardSpacing),y:oppPileStart.y-pileSpacing},
-
+                
+                //player hand
                 {x:yourPileStart.x+1.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
                 {x:yourPileStart.x+2.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
                 {x:yourPileStart.x+3.5*(cardWidth+cardSpacing),y:yourPileStart.y-pileSpacing},
@@ -227,8 +228,11 @@ export class Game extends Scene {
             return values1.some(val1=>values2.some(val2=>Math.abs(val1-val2)===0));
         }
 
-        //checks for matching colors between cards
+        //checks for matching colors between cards or a wild
         function isColorMatch(card1,card2) {
+            if(card1.color === "" || card2.color === "") {
+                return true;
+            }
             return card1.color===card2.color;
         }
 
@@ -284,7 +288,7 @@ export class Game extends Scene {
                         cardSprite.setTexture(key);
                         scene.children.bringToTop(cardSprite);
                         if(scene.drawPileCards.length === 0) {
-                            scene.add.image(drawPile.x,drawPile.y,"");
+                            scene.add.image(drawPile.x,drawPile.y,"empty");
                         }
                         playPile.setData("topCard",cardData);
                         checkForEndGame(scene.drawPileCards,playedCards,allCards,topCard.data.list.card);
