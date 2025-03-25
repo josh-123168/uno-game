@@ -2,6 +2,8 @@ import { Scene } from 'phaser';
 
 const WIDTH = 1000;
 const HEIGHT = 700;
+const PLAYER_1 = 0;
+const PLAYER_2 = 1;
 
 export class Game extends Scene {
 
@@ -39,7 +41,7 @@ export class Game extends Scene {
         let cardDeck = createDeck();
         dealCards(cardDeck,this);
         message = this.add.text(WIDTH/2,HEIGHT/2, 'Hello Player',
-        {fontSize:'50px',fill:'#f5f5f5',fontStyle:'bold',align:'center'});
+        {fontSize:'50px',color:'#f5f5f5',fontStyle:'bold',align:'center'});
         message.setOrigin(0.5);
         message.setAlpha(0);
 
@@ -118,7 +120,7 @@ export class Game extends Scene {
                 let cardSprite = createCardSprite(scene,card,positions[i],i<7,false);
                 allCards.push(cardSprite);
 
-                handleCardInteraction(scene,cardSprite,playPile,allCards,playedCards);
+                handleCardInteraction(scene,cardSprite,playPile,allCards,playedCards, i < 7 ? PLAYER_1 : PLAYER_2);
             }
 
             scene.drawPileCards = [];
@@ -173,15 +175,17 @@ export class Game extends Scene {
         }
 
 
-        function handleCardInteraction(scene,cardSprite,playPile,allCards,playedCards)
+        function handleCardInteraction(scene,cardSprite,playPile,allCards,playedCards,player)
         {
             cardSprite.on("pointerdown",function(pointer){
+                if (turnState !== player) return;
                 let topCardData = playPile.getData("topCard");
                 if(topCardData == undefined)
                     return;
                 let cardData = cardSprite.getData("card");
                 let key = `${cardData.color}_${cardData.value}`;
                 if(isValueMatch(topCardData,cardData) || isColorMatch(topCardData,cardData) && isCardFree(cardSprite,allCards)) {
+                    changeTurn()
                     scene.tweens.add({
                         targets: cardSprite,
                         x: playPile.x,
@@ -258,7 +262,7 @@ export class Game extends Scene {
         }
 
         function checkAndFlipFreeCards(allCards) {
-            for(let i=0;i<allCards.length;i++) {
+            for(let i=0; i<allCards.length; i++) {
                 let key = allCards[i].data.list.card.color+"_"+allCards[i].data.list.card.value;
                 if(isCardFree(allCards[i],allCards))
                     allCards[i].setTexture(key);
@@ -269,6 +273,7 @@ export class Game extends Scene {
             drawPile.on("pointerdown",function(pointer){
                 if(scene.drawPileCards.length === 0)
                     return;
+                changeTurn()
                 let topCard = scene.drawPileCards.pop();
                 let cardData = topCard.getData("card");
                 let key = `${cardData.color}_${cardData.value}`;
@@ -330,6 +335,39 @@ export class Game extends Scene {
                 }
             }
             return false;
+        }
+
+        //changes whose turn it is
+        let turnState = 0;
+
+        function changeTurn() {
+            if (turnState === PLAYER_1) {
+                turnState = PLAYER_2;
+            } else {
+                turnState = PLAYER_1;
+            }
+        }
+
+        //locks a hand depending on whose turn it is
+        function lockHand() {
+            if (turnState === 1) {
+
+            }
+        }
+
+        //searches for an empty hand to call a win
+        function detectGameWin() {
+
+        }
+
+        //detects if a special card is played and makes corresponding changes
+        function specialCardPlayed() {
+
+        }
+
+        //ends game in a tie if the deck is empty
+        function detectEmptyDeck() {
+
         }
     }
 
