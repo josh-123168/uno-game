@@ -185,7 +185,6 @@ export class Game extends Scene {
                 let cardData = cardSprite.getData("card");
                 let key = `${cardData.color}_${cardData.value}`;
                 if(isValueMatch(topCardData,cardData) || isColorMatch(topCardData,cardData) && isCardFree(cardSprite,allCards)) {
-                    changeTurn()
                     scene.tweens.add({
                         targets: cardSprite,
                         x: playPile.x,
@@ -201,10 +200,26 @@ export class Game extends Scene {
                             playedCards.push(cardSprite);
                             checkForEndGame(scene.drawPileCards,playedCards,allCards,cardData);
                         }
+                        
                     });
+                    if(specialCardPlayed(cardData)) {
+                        return;
+                    } else {
+                        changeTurn();
+                    }
                 }                
             });
         }
+
+        //detects if a special card is played and makes corresponding changes
+        function specialCardPlayed(cardData) {
+            if(cardData.value === "Reverse" || cardData.value === "Skip" || cardData.value === "Draw" || cardData.value === "Wild_Draw") {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        
 
         function isCardFree(card,allCards) {
             // const cardX = card.x;
@@ -338,7 +353,7 @@ export class Game extends Scene {
         }
 
         //changes whose turn it is
-        let turnState = 0;
+        let turnState = PLAYER_1;
 
         function changeTurn() {
             if (turnState === PLAYER_1) {
@@ -357,11 +372,6 @@ export class Game extends Scene {
 
         //searches for an empty hand to call a win
         function detectGameWin() {
-
-        }
-
-        //detects if a special card is played and makes corresponding changes
-        function specialCardPlayed() {
 
         }
 
