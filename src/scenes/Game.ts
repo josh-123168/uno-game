@@ -101,6 +101,8 @@ export class Game extends Scene {
 
             let allCards = [];
             let playedCards = [];
+            let playerOneCards = [];
+            let playerTwoCards = [];
 
             let drawPile = scene.add.image(400,350,"card_back");
             drawPile.displayWidth = cardWidth;
@@ -115,12 +117,22 @@ export class Game extends Scene {
             playPile.setData("type","playPile")
 
             //all hands loop
-            for(let i=0; i<14; i++) {
+            for(let i=0; i<7; i++) {
                 let card = deck.pop();
                 let cardSprite = createCardSprite(scene,card,positions[i],i<7,false);
                 allCards.push(cardSprite);
+                playerOneCards.push(cardSprite)
 
-                handleCardInteraction(scene,cardSprite,playPile,allCards,playedCards, i < 7 ? PLAYER_1 : PLAYER_2);
+                handleCardInteraction(scene,cardSprite,playPile,allCards,playedCards, i < 7 ? PLAYER_1 : PLAYER_2,playerOneCards,playerTwoCards);
+            }
+
+            for(let i=7; i<14; i++) {
+                let card = deck.pop();
+                let cardSprite = createCardSprite(scene,card,positions[i],i<7,false);
+                allCards.push(cardSprite);
+                playerTwoCards.push(cardSprite)
+
+                handleCardInteraction(scene,cardSprite,playPile,allCards,playedCards, i < 7 ? PLAYER_1 : PLAYER_2,playerOneCards,playerTwoCards);
             }
 
             scene.drawPileCards = [];
@@ -131,7 +143,7 @@ export class Game extends Scene {
                 let cardSprite = createCardSprite(scene,card,{x:drawPile,y:drawPile.y},true,true);
                 scene.drawPileCards.push(cardSprite);
             }
-            handleDrawPileClick(scene,drawPile,playPile,allCards,playedCards);
+            handleDrawPileClick(scene,drawPile,playPile,allCards,playedCards,playerOneCards,playerTwoCards);
         }
 
         // function pickFirstCard(firstCard) {
@@ -175,7 +187,7 @@ export class Game extends Scene {
         }
 
 
-        function handleCardInteraction(scene,cardSprite,playPile,allCards,playedCards,player)
+        function handleCardInteraction(scene,cardSprite,playPile,allCards,playedCards,player,playerOneCards,playerTwoCards)
         {
             cardSprite.on("pointerdown",function(pointer){
                 if (turnState !== player) return;
@@ -198,14 +210,27 @@ export class Game extends Scene {
                             cardSprite.disableInteractive();
                             checkAndFlipFreeCards(allCards);
                             playedCards.push(cardSprite);
-                            checkForEndGame(scene.drawPileCards,playedCards,allCards,cardData);
+                            checkForEndGame(scene.drawPileCards,playedCards,allCards,cardData,playerOneCards,playerTwoCards);
                         }
                         
                     });
-                    if(specialCardPlayed(cardData)) {
-                        return;
-                    } else {
-                        changeTurn();
+                    if(player === PLAYER_1) {
+                        if(specialCardPlayed(cardData)) {
+                            playerOneCards.pop(cardSprite);
+                            return;
+                        } else {
+                            playerOneCards.pop(cardSprite);
+                            changeTurn();
+                        }
+                    }
+                    if(player === PLAYER_2) {
+                        if(specialCardPlayed(cardData)) {
+                            playerTwoCards.pop(cardSprite);
+                            return;
+                        } else {
+                            playerTwoCards.pop(cardSprite);
+                            changeTurn();
+                        }
                     }
                 }                
             });
@@ -284,7 +309,7 @@ export class Game extends Scene {
             }
         }
 
-        function handleDrawPileClick(scene,drawPile,playPile,allCards,playedCards) {
+        function handleDrawPileClick(scene,drawPile,playPile,allCards,playedCards,playerOneCards,playerTwoCards) {
             drawPile.on("pointerdown",function(pointer){
                 if(scene.drawPileCards.length === 0)
                     return;
@@ -311,18 +336,24 @@ export class Game extends Scene {
                             scene.add.image(drawPile.x,drawPile.y,"empty");
                         }
                         playPile.setData("topCard",cardData);
-                        checkForEndGame(scene.drawPileCards,playedCards,allCards,topCard.data.list.card);
+                        checkForEndGame(scene.drawPileCards,playedCards,allCards,topCard.data.list.card,playerOneCards,playerTwoCards);
                     }
                 });
             });
         }
 
-        function checkForEndGame(drawPileCards,playedCards,allCards,topCard) {
-            if(drawPileCards.length === 0 && !isThereAnyLegalMove(allCards,topCard,playedCards)) {
-                displayEndMessage("You Lost!");
+        function checkForEndGame(drawPileCards,playedCards,allCards,topCard,playerOneCards,playerTwoCards) {
+            // if(drawPileCards.length === 0 && !isThereAnyLegalMove(allCards,topCard,playedCards)) {
+            //     displayEndMessage("You Lost!");
+            // }
+            // if(playedCards.length === 28) {
+            //     displayEndMessage("You Won!",0x048738);
+            // }
+            if(playerOneCards.length === 0) {
+                displayEndMessage("You Lost!")
             }
-            if(playedCards.length === 28) {
-                displayEndMessage("You Won!",0x048738);
+            if(playerTwoCards.length === 0) {
+                displayEndMessage("You Won!",0x048738)
             }
         }
 
