@@ -288,7 +288,7 @@ export class Game extends Scene {
             drawPile.on("pointerdown",function(pointer){
                 if(scene.drawPileCards.length === 0)
                     return;
-                changeTurn()
+                changeTurn();
                 let topCard = scene.drawPileCards.pop();
                 let cardData = topCard.getData("card");
                 let key = `${cardData.color}_${cardData.value}`;
@@ -360,13 +360,6 @@ export class Game extends Scene {
                 turnState = PLAYER_2;
             } else {
                 turnState = PLAYER_1;
-            }
-        }
-
-        //locks a hand depending on whose turn it is
-        function lockHand() {
-            if (turnState === 1) {
-
             }
         }
 
