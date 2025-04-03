@@ -210,7 +210,7 @@ export class Game extends Scene {
                             cardSprite.disableInteractive();
                             checkAndFlipFreeCards(allCards);
                             playedCards.push(cardSprite);
-                            checkForEndGame(scene.drawPileCards,playedCards,allCards,cardData,playerOneCards,playerTwoCards);
+                            checkForEndGame(playerOneCards,playerTwoCards);
                         }
                         
                     });
@@ -336,19 +336,13 @@ export class Game extends Scene {
                             scene.add.image(drawPile.x,drawPile.y,"empty");
                         }
                         playPile.setData("topCard",cardData);
-                        checkForEndGame(scene.drawPileCards,playedCards,allCards,topCard.data.list.card,playerOneCards,playerTwoCards);
+                        checkForEndGame(playerOneCards,playerTwoCards);
                     }
                 });
             });
         }
 
-        function checkForEndGame(drawPileCards,playedCards,allCards,topCard,playerOneCards,playerTwoCards) {
-            // if(drawPileCards.length === 0 && !isThereAnyLegalMove(allCards,topCard,playedCards)) {
-            //     displayEndMessage("You Lost!");
-            // }
-            // if(playedCards.length === 28) {
-            //     displayEndMessage("You Won!",0x048738);
-            // }
+        function checkForEndGame(playerOneCards,playerTwoCards) {
             if(playerOneCards.length === 0) {
                 displayEndMessage("You Lost!")
             }
@@ -371,6 +365,8 @@ export class Game extends Scene {
             messageBackground.setVisible(true);
             message.setText(messageText);
             message.setAlpha(1);
+            message.depth = 10000;
+            messageBackground.depth = 1000;
         }
 
         function isThereAnyLegalMove(allCards,topCard,playedCards) {
